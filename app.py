@@ -1,27 +1,69 @@
 # app.py
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-import mysql.connector
 import requests 
 
 app = Flask(__name__)
 CORS(app)
 
-# MySQL Database Connection (Using Environment Variables)
-db = mysql.connector.connect(
+# PostgreSQL Database Connection
+db = psycopg2.connect(
     host=os.environ.get("DB_HOST", "localhost"),
-    user=os.environ.get("DB_USER", "root"),
-    password=os.environ.get("DB_PASSWORD", "root"), 
-    database=os.environ.get("DB_NAME", "portfolio_db")
+    port=os.environ.get("DB_PORT", "5432"),
+    user=os.environ.get("DB_USER", "postgres"),
+    password=os.environ.get("DB_PASSWORD", "root"),
+    dbname=os.environ.get("DB_NAME", "portfolio_db")
 )
-cursor = db.cursor(dictionary=True)
+cursor = db.cursor(cursor_factory=RealDictCursor)
+
+# Auto-create Tables if they don't exist
+def init_db():
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS projects (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            tech VARCHAR(255),
+            image_url VARCHAR(500),
+            description TEXT,
+            github_link VARCHAR(500)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS certificates (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            issuer VARCHAR(255),
+            image_url VARCHAR(500)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS techstack (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            logo_url VARCHAR(500)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS visitors (
+            id SERIAL PRIMARY KEY,
+            ip_address VARCHAR(255),
+            city VARCHAR(255),
+            country VARCHAR(255),
+            browser VARCHAR(255),
+            visited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+    db.commit()
+
+init_db() # Run table creation
 
 # ================= VISITOR TRACKING APIs =================
 @app.route('/api/track-view', methods=['GET'])
 def track_view():
     ip = request.headers.get('X-Forwarded-For', request.remote_addr)
-    
     if ip == '127.0.0.1' or ip == '::1':
         city = 'Local'
         country = 'Network'
@@ -56,7 +98,7 @@ def get_projects():
 @app.route('/api/projects', methods=['POST'])
 def add_project():
     data = request.json
-    cursor.execute("INSERT INTO projects (title, tech, image_url, description, github_link) VALUES (%s, %s, %s, %s, %s)", 
+    cursor.execute("INSERT INTO projects (title, tech, image_url, description, github_link) VALUES (%s, %s, %s, %s, %s) RETURNING id", 
                    (data['title'], data['tech'], data['image_url'], data['description'], data['github_link']))
     db.commit()
     return jsonify({"message": "Project added successfully!"}), 201
@@ -76,7 +118,7 @@ def get_certificates():
 @app.route('/api/certificates', methods=['POST'])
 def add_certificate():
     data = request.json
-    cursor.execute("INSERT INTO certificates (title, issuer, image_url) VALUES (%s, %s, %s)", 
+    cursor.execute("INSERT INTO certificates (title, issuer, image_url) VALUES (%s, %s, %s) RETURNING id", 
                    (data['title'], data['issuer'], data['image_url']))
     db.commit()
     return jsonify({"message": "Certificate added"}), 201
@@ -96,7 +138,7 @@ def get_techstack():
 @app.route('/api/techstack', methods=['POST'])
 def add_techstack():
     data = request.json
-    cursor.execute("INSERT INTO techstack (name, logo_url) VALUES (%s, %s)", 
+    cursor.execute("INSERT INTO techstack (name, logo_url) VALUES (%s, %s) RETURNING id", 
                    (data['name'], data['logo_url']))
     db.commit()
     return jsonify({"message": "Tech stack added"}), 201
@@ -106,7 +148,6 @@ def delete_techstack(id):
     cursor.execute("DELETE FROM techstack WHERE id = %s", (id,))
     db.commit()
     return jsonify({"message": "Tech stack deleted"})
-
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
