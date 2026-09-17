@@ -218,7 +218,10 @@
         </div>
     </div>
 
-    <script>
+       <script>
+        // Backend API URL (Live Render Link) - हा लाईव्ह लिंख ऍड केला आहे
+        const API_URL = 'https://my-portfolio-jyoh.onrender.com';
+
         // Login
         function checkPass() {
             const user = document.getElementById('adminUser').value;
@@ -244,6 +247,7 @@
             await fetchProjects();
             await fetchCertificates();
             await fetchTechStack();
+            await fetchVisitors();
             updateStats();
         }
 
@@ -252,66 +256,97 @@
             document.getElementById('statProjects').innerText = document.querySelectorAll('#projectList .list-item').length;
             document.getElementById('statCerts').innerText = document.querySelectorAll('#certList .list-item').length;
             document.getElementById('statTech').innerText = document.querySelectorAll('#techList .list-item').length;
-            document.getElementById('statViews').innerText = "1.2k"; // Static mock views for premium look
+            document.getElementById('statViews').innerText = document.querySelectorAll('#visitorList .list-item').length;
         }
 
         // Projects Logic
         async function fetchProjects() {
-            const res = await fetch('https://my-portfolio-jyoh.onrender.com');
-            const data = await res.json();
-            const list = document.getElementById('projectList');
-            list.innerHTML = '';
-            data.forEach(p => {
-                list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${p.title}</h3><p>${p.tech}</p></div><button class="btn-delete" onclick="deleteItem('projects', ${p.id})">Delete</button></div>`;
-            });
+            try {
+                const res = await fetch(`${API_URL}/api/projects`);
+                const data = await res.json();
+                const list = document.getElementById('projectList');
+                list.innerHTML = '';
+                if(data.length === 0) list.innerHTML = '<p style="color:#666;">No projects found.</p>';
+                data.forEach(p => {
+                    list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${p.title}</h3><p>${p.tech}</p></div><button class="btn-delete" onclick="deleteItem('projects', ${p.id})">Delete</button></div>`;
+                });
+            } catch(e) { console.error("Error fetching projects:", e); }
             updateStats();
         }
         document.getElementById('projectForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = { title: p_title.value, tech: p_tech.value, image_url: p_img.value, description: p_desc.value, github_link: p_link.value };
-            await fetch('http://localhost:5000/api/projects', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            await fetch(`${API_URL}/api/projects`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
             e.target.reset(); fetchProjects();
         });
 
         // Certificates Logic
         async function fetchCertificates() {
-            const res = await fetch('http://localhost:5000/api/certificates');
-            const data = await res.json();
-            const list = document.getElementById('certList');
-            list.innerHTML = '';
-            data.forEach(c => {
-                list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${c.title}</h3><p>${c.issuer}</p></div><button class="btn-delete" onclick="deleteItem('certificates', ${c.id})">Delete</button></div>`;
-            });
+            try {
+                const res = await fetch(`${API_URL}/api/certificates`);
+                const data = await res.json();
+                const list = document.getElementById('certList');
+                list.innerHTML = '';
+                if(data.length === 0) list.innerHTML = '<p style="color:#666;">No certificates found.</p>';
+                data.forEach(c => {
+                    list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${c.title}</h3><p>${c.issuer}</p></div><button class="btn-delete" onclick="deleteItem('certificates', ${c.id})">Delete</button></div>`;
+                });
+            } catch(e) { console.error("Error fetching certificates:", e); }
             updateStats();
         }
         document.getElementById('certForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = { title: c_title.value, issuer: c_issuer.value, image_url: c_img.value };
-            await fetch('http://localhost:5000/api/certificates', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            await fetch(`${API_URL}/api/certificates`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
             e.target.reset(); fetchCertificates();
         });
 
         // Tech Stack Logic
         async function fetchTechStack() {
-            const res = await fetch('http://localhost:5000/api/techstack');
-            const data = await res.json();
-            const list = document.getElementById('techList');
-            list.innerHTML = '';
-            data.forEach(t => {
-                list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${t.name}</h3><p>${t.logo_url}</p></div><button class="btn-delete" onclick="deleteItem('techstack', ${t.id})">Delete</button></div>`;
-            });
+            try {
+                const res = await fetch(`${API_URL}/api/techstack`);
+                const data = await res.json();
+                const list = document.getElementById('techList');
+                list.innerHTML = '';
+                if(data.length === 0) list.innerHTML = '<p style="color:#666;">No tech stack found.</p>';
+                data.forEach(t => {
+                    list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${t.name}</h3><p>${t.logo_url}</p></div><button class="btn-delete" onclick="deleteItem('techstack', ${t.id})">Delete</button></div>`;
+                });
+            } catch(e) { console.error("Error fetching techstack:", e); }
             updateStats();
         }
         document.getElementById('techForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const data = { name: t_name.value, logo_url: t_logo.value };
-            await fetch('http://localhost:5000/api/techstack', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            await fetch(`${API_URL}/api/techstack`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
             e.target.reset(); fetchTechStack();
         });
 
+        // Visitors Logic
+        async function fetchVisitors() {
+            try {
+                const res = await fetch(`${API_URL}/api/visitors`);
+                const data = await res.json();
+                const list = document.getElementById('visitorList');
+                list.innerHTML = '';
+                if(data.length === 0) list.innerHTML = '<p style="color:#666;">No recent views.</p>';
+                data.forEach(v => {
+                    list.innerHTML += `
+                    <div class="list-item">
+                        <div class="item-info">
+                            <h3>${v.city}, ${v.country}</h3>
+                            <p>IP: ${v.ip_address} | Browser: ${v.browser.substring(0, 30)}...</p>
+                        </div>
+                        <div style="color: #666; font-size: 0.8rem;">${new Date(v.visited_at).toLocaleString()}</div>
+                    </div>`;
+                });
+            } catch(e) { console.error("Error fetching visitors:", e); }
+            updateStats();
+        }
+
         // Generic Delete Function
         async function deleteItem(type, id) {
-            await fetch(`http://localhost:5000/api/${type}/${id}`, { method: 'DELETE' });
+            await fetch(`${API_URL}/api/${type}/${id}`, { method: 'DELETE' });
             if(type === 'projects') fetchProjects();
             if(type === 'certificates') fetchCertificates();
             if(type === 'techstack') fetchTechStack();
