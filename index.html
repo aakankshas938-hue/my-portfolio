@@ -453,7 +453,7 @@
         }
 
         // Smart Fetch: If Python server is ON, fetch from MySQL. If OFF, keep hardcoded projects.
-        fetch('http://localhost:5000/api/projects')
+        fetch('https://my-portfolio-jyoh.onrender.com')
             .then(response => {
                 if (!response.ok) throw new Error('Server not running');
                 return response.json();
