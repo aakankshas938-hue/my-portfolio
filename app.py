@@ -9,14 +9,9 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# PostgreSQL Database Connection
-db = psycopg2.connect(
-    host=os.environ.get("DB_HOST", "localhost"),
-    port=os.environ.get("DB_PORT", "5432"),
-    user=os.environ.get("DB_USER", "postgres"),
-    password=os.environ.get("DB_PASSWORD", "root"),
-    dbname=os.environ.get("DB_NAME", "portfolio_db")
-)
+# PostgreSQL Database Connection (Using DATABASE_URL)
+DATABASE_URL = os.environ.get("DATABASE_URL", "dbname=portfolio_db user=postgres password=root host=localhost")
+db = psycopg2.connect(DATABASE_URL)
 cursor = db.cursor(cursor_factory=RealDictCursor)
 
 # Auto-create Tables if they don't exist
