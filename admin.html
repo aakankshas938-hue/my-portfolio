@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Akanksha</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #08090d;
+            --bg-card: rgba(255, 255, 255, 0.03);
+            --bg-sidebar: rgba(10, 10, 12, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.05);
+            --text-main: #e4e4e7;
+            --text-muted: #71717a;
+            --accent-glow: rgba(255, 255, 255, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); overflow-x: hidden; }
+
+        /* Ambient Background Glows */
+        body::before { content: ''; position: fixed; top: -20%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(50, 50, 50, 0.15), transparent 60%); filter: blur(80px); z-index: -1; }
+        body::after { content: ''; position: fixed; bottom: -20%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(30, 30, 30, 0.1), transparent 60%); filter: blur(80px); z-index: -1; }
+
+        /* Login Screen */
+        #loginScreen { position: fixed; inset: 0; background-color: rgba(8, 9, 13, 0.95); backdrop-filter: blur(20px); z-index: 100000; display: flex; justify-content: center; align-items: center; }
+        .login-box { background: var(--bg-card); backdrop-filter: blur(15px); border: 1px solid var(--border-glass); border-radius: 20px; padding: 50px; width: 400px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+        .login-box h2 { margin-bottom: 30px; font-family: 'Space Grotesk', sans-serif; color: #fff; font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; }
+        .login-box input { width: 100%; padding: 14px; margin-bottom: 20px; background: rgba(0,0,0,0.4); border: 1px solid var(--border-glass); border-radius: 10px; color: #fff; text-align: center; transition: 0.3s; }
+        .login-box input:focus { outline: none; border-color: rgba(255,255,255,0.2); box-shadow: 0 0 15px var(--accent-glow); }
+        .login-box button { width: 100%; padding: 14px; background: linear-gradient(135deg, #fff, #d4d4d8); color: #000; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+        .login-box button:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(255,255,255,0.2); }
+
+        /* Main App Layout */
+        #mainApp { display: none; flex-direction: row; height: 100vh; }
+        .sidebar { width: 260px; background: var(--bg-sidebar); backdrop-filter: blur(20px); border-right: 1px solid var(--border-glass); padding: 30px 0; display: flex; flex-direction: column; justify-content: space-between; }
+        .sidebar-header { padding: 0 25px 30px; font-family: 'Space Grotesk', sans-serif; font-size: 1.6rem; font-weight: 700; color: #fff; border-bottom: 1px solid var(--border-glass); margin-bottom: 25px; display: flex; align-items: center; gap: 12px; }
+        .sidebar-header i { color: #a1a1aa; }
+        .sidebar-menu { display: flex; flex-direction: column; gap: 5px; padding: 0 15px; }
+        .menu-item { padding: 14px 20px; display: flex; align-items: center; gap: 14px; color: var(--text-muted); cursor: pointer; border-radius: 12px; transition: 0.3s; font-weight: 500; text-decoration: none; }
+        .menu-item:hover { background: var(--bg-card); color: #fff; }
+        .menu-item.active { background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02)); color: #fff; box-shadow: inset 0 0 20px rgba(255,255,255,0.05); }
+        .menu-item i { width: 20px; text-align: center; font-size: 1.1rem; }
+        .sidebar-footer { padding: 20px; border-top: 1px solid var(--border-glass); display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #444, #222); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #fff; }
+        .user-info h4 { font-size: 0.9rem; color: #fff; }
+        .user-info p { font-size: 0.75rem; color: var(--text-muted); }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 50px; overflow-y: auto; }
+        .section { display: none; animation: fadeIn 0.6s ease; }
+        .section.active-section { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        h1 { font-family: 'Space Grotesk', sans-serif; font-size: 2.5rem; margin-bottom: 10px; font-weight: 700; letter-spacing: -0.02em; }
+        .subtitle { color: var(--text-muted); margin-bottom: 40px; font-size: 1.1rem; }
+
+        /* Premium Dashboard Stats */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .stat-card { background: var(--bg-card); backdrop-filter: blur(15px); border: 1px solid var(--border-glass); border-radius: 20px; padding: 30px; position: relative; overflow: hidden; transition: 0.4s; }
+        .stat-card:hover { transform: translateY(-5px); border-color: rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent); opacity: 0; transition: 0.4s; }
+        .stat-card:hover::before { opacity: 1; }
+        .stat-icon { width: 50px; height: 50px; border-radius: 14px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 1.5rem; color: #fff; }
+        .stat-card h2 { font-size: 3.5rem; color: #fff; margin-bottom: 5px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+        .stat-card p { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; }
+
+        /* Forms & Lists (Glassmorphism) */
+        .glass-card { background: var(--bg-card); backdrop-filter: blur(15px); border: 1px solid var(--border-glass); border-radius: 20px; padding: 35px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .card-header { margin-bottom: 25px; }
+        .card-header h3 { font-size: 1.4rem; font-family: 'Space Grotesk', sans-serif; color: #fff; }
+        
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 0.85rem; font-weight: 500; }
+        input, textarea { width: 100%; padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--border-glass); border-radius: 10px; color: #fff; transition: 0.3s; }
+        input:focus, textarea:focus { outline: none; border-color: rgba(255,255,255,0.2); box-shadow: 0 0 15px var(--accent-glow); }
+        .btn-submit { background: linear-gradient(135deg, #fff, #d4d4d8); color: #000; border: none; padding: 14px 30px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(255,255,255,0.2); }
+        
+        .list-item { background: rgba(255,255,255,0.02); border: 1px solid var(--border-glass); border-radius: 12px; padding: 18px 25px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; transition: 0.3s; }
+        .list-item:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+        .item-info h3 { font-size: 1.1rem; color: #fff; margin-bottom: 4px; }
+        .item-info p { color: var(--text-muted); font-size: 0.85rem; margin: 0; }
+        .btn-delete { background: rgba(255, 80, 80, 0.1); border: 1px solid rgba(255, 80, 80, 0.2); color: #ff5050; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.3s; font-size: 0.85rem; }
+        .btn-delete:hover { background: #ff5050; color: #fff; border-color: #ff5050; box-shadow: 0 5px 15px rgba(255,80,80,0.3); }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main-content { padding: 20px; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login -->
+    <div id="loginScreen">
+        <div class="login-box">
+            <h2><i class="fas fa-shield-halved"></i> Admin Access</h2>
+            <input type="text" id="adminUser" placeholder="Enter Username" onkeypress="handleKeyPress(event)">
+            <input type="password" id="adminPass" placeholder="Enter Password" onkeypress="handleKeyPress(event)">
+            <button onclick="checkPass()">Login Securely</button>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="mainApp">
+        <div class="sidebar">
+            <div>
+                <div class="sidebar-header"><i class="fas fa-bolt"></i> akanksha.dev</div>
+                <div class="sidebar-menu">
+                    <div class="menu-item active" onclick="showSection('dashboard', this)"><i class="fas fa-chart-pie"></i> Dashboard</div>
+                    <div class="menu-item" onclick="showSection('projects', this)"><i class="fas fa-diagram-project"></i> Projects</div>
+                    <div class="menu-item" onclick="showSection('certificates', this)"><i class="fas fa-certificate"></i> Certificates</div>
+                    <div class="menu-item" onclick="showSection('techstack', this)"><i class="fas fa-layer-group"></i> Tech Stack</div>
+                    <a href="index.html" class="menu-item"><i class="fas fa-arrow-up-right-from-square"></i> View Website</a>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="avatar">A</div>
+                <div class="user-info">
+                    <h4>Akanksha Shinde</h4>
+                    <p>Administrator</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            
+            <!-- Dashboard -->
+            <div id="dashboard" class="section active-section">
+                <h1>Dashboard Overview</h1>
+                <p class="subtitle">Welcome back, Akanksha! Here is your portfolio summary.</p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-diagram-project"></i></div>
+                        <h2 id="statProjects">0</h2>
+                        <p>Total Projects</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-certificate"></i></div>
+                        <h2 id="statCerts">0</h2>
+                        <p>Total Certificates</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-layer-group"></i></div>
+                        <h2 id="statTech">0</h2>
+                        <p>Tech Stack Items</p>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fas fa-eye"></i></div>
+                        <h2 id="statViews">0</h2>
+                        <p>Portfolio Views</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projects -->
+            <div id="projects" class="section">
+                <h1>Manage Projects</h1>
+                <p class="subtitle">Add a new project or delete an existing one.</p>
+                <div class="glass-card">
+                    <div class="card-header"><h3><i class="fas fa-plus-circle"></i> Add New Project</h3></div>
+                    <form id="projectForm">
+                        <div class="form-row">
+                            <div class="form-group"><label>Project Title</label><input type="text" id="p_title" required></div>
+                            <div class="form-group"><label>Tech Stack</label><input type="text" id="p_tech" required></div>
+                        </div>
+                        <div class="form-group"><label>Image Name/URL</label><input type="text" id="p_img" required placeholder="e.g., newproject.png"></div>
+                        <div class="form-group"><label>Description</label><textarea id="p_desc" rows="3" required></textarea></div>
+                        <div class="form-group"><label>GitHub Link</label><input type="text" id="p_link" required></div>
+                        <button type="submit" class="btn-submit">+ Add Project</button>
+                    </form>
+                </div>
+                <div class="card-header"><h3>Existing Projects</h3></div>
+                <div id="projectList"></div>
+            </div>
+
+            <!-- Certificates -->
+            <div id="certificates" class="section">
+                <h1>Manage Certificates</h1>
+                <p class="subtitle">Add a new certificate or delete an existing one.</p>
+                <div class="glass-card">
+                    <div class="card-header"><h3><i class="fas fa-plus-circle"></i> Add New Certificate</h3></div>
+                    <form id="certForm">
+                        <div class="form-row">
+                            <div class="form-group"><label>Certificate Title</label><input type="text" id="c_title" required></div>
+                            <div class="form-group"><label>Issuer</label><input type="text" id="c_issuer" required></div>
+                        </div>
+                        <div class="form-group"><label>Image Name/URL</label><input type="text" id="c_img" required placeholder="e.g., newcert.png"></div>
+                        <button type="submit" class="btn-submit">+ Add Certificate</button>
+                    </form>
+                </div>
+                <div class="card-header"><h3>Existing Certificates</h3></div>
+                <div id="certList"></div>
+            </div>
+
+            <!-- Tech Stack -->
+            <div id="techstack" class="section">
+                <h1>Manage Tech Stack</h1>
+                <p class="subtitle">Add a new technology or delete an existing one.</p>
+                <div class="glass-card">
+                    <div class="card-header"><h3><i class="fas fa-plus-circle"></i> Add New Technology</h3></div>
+                    <form id="techForm">
+                        <div class="form-row">
+                            <div class="form-group"><label>Technology Name</label><input type="text" id="t_name" required></div>
+                            <div class="form-group"><label>Logo URL</label><input type="text" id="t_logo" required></div>
+                        </div>
+                        <button type="submit" class="btn-submit">+ Add Technology</button>
+                    </form>
+                </div>
+                <div class="card-header"><h3>Existing Tech Stack</h3></div>
+                <div id="techList"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Login
+        function checkPass() {
+            const user = document.getElementById('adminUser').value;
+            const pass = document.getElementById('adminPass').value;
+            if (user === 'Akanksha' && pass === 'Akanksha8657') {
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('mainApp').style.display = 'flex';
+                loadAllData();
+            } else { alert('Wrong Credentials! Access Denied.'); }
+        }
+        function handleKeyPress(e) { if (e.key === 'Enter') checkPass(); }
+
+        // Tabs Switching
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active-section'));
+            document.getElementById(sectionId).classList.add('active-section');
+            document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // Load All Data
+        async function loadAllData() {
+            await fetchProjects();
+            await fetchCertificates();
+            await fetchTechStack();
+            updateStats();
+        }
+
+        // Update Dashboard Stats
+        function updateStats() {
+            document.getElementById('statProjects').innerText = document.querySelectorAll('#projectList .list-item').length;
+            document.getElementById('statCerts').innerText = document.querySelectorAll('#certList .list-item').length;
+            document.getElementById('statTech').innerText = document.querySelectorAll('#techList .list-item').length;
+            document.getElementById('statViews').innerText = "1.2k"; // Static mock views for premium look
+        }
+
+        // Projects Logic
+        async function fetchProjects() {
+            const res = await fetch('http://localhost:5000/api/projects');
+            const data = await res.json();
+            const list = document.getElementById('projectList');
+            list.innerHTML = '';
+            data.forEach(p => {
+                list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${p.title}</h3><p>${p.tech}</p></div><button class="btn-delete" onclick="deleteItem('projects', ${p.id})">Delete</button></div>`;
+            });
+            updateStats();
+        }
+        document.getElementById('projectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { title: p_title.value, tech: p_tech.value, image_url: p_img.value, description: p_desc.value, github_link: p_link.value };
+            await fetch('http://localhost:5000/api/projects', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            e.target.reset(); fetchProjects();
+        });
+
+        // Certificates Logic
+        async function fetchCertificates() {
+            const res = await fetch('http://localhost:5000/api/certificates');
+            const data = await res.json();
+            const list = document.getElementById('certList');
+            list.innerHTML = '';
+            data.forEach(c => {
+                list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${c.title}</h3><p>${c.issuer}</p></div><button class="btn-delete" onclick="deleteItem('certificates', ${c.id})">Delete</button></div>`;
+            });
+            updateStats();
+        }
+        document.getElementById('certForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { title: c_title.value, issuer: c_issuer.value, image_url: c_img.value };
+            await fetch('http://localhost:5000/api/certificates', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            e.target.reset(); fetchCertificates();
+        });
+
+        // Tech Stack Logic
+        async function fetchTechStack() {
+            const res = await fetch('http://localhost:5000/api/techstack');
+            const data = await res.json();
+            const list = document.getElementById('techList');
+            list.innerHTML = '';
+            data.forEach(t => {
+                list.innerHTML += `<div class="list-item"><div class="item-info"><h3>${t.name}</h3><p>${t.logo_url}</p></div><button class="btn-delete" onclick="deleteItem('techstack', ${t.id})">Delete</button></div>`;
+            });
+            updateStats();
+        }
+        document.getElementById('techForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { name: t_name.value, logo_url: t_logo.value };
+            await fetch('http://localhost:5000/api/techstack', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+            e.target.reset(); fetchTechStack();
+        });
+
+        // Generic Delete Function
+        async function deleteItem(type, id) {
+            await fetch(`http://localhost:5000/api/${type}/${id}`, { method: 'DELETE' });
+            if(type === 'projects') fetchProjects();
+            if(type === 'certificates') fetchCertificates();
+            if(type === 'techstack') fetchTechStack();
+        }
+    </script>
+</body>
+</html>
