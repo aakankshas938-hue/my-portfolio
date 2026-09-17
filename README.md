@@ -19,6 +19,7 @@ Backend: Python, Flask
 Database: MySQL
 
 
+
 📂 Projects Showcase
 Bank Loan Management & Risk Analysis (Power BI / Python)
 
