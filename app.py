@@ -1,4 +1,5 @@
 # app.py
+import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 import mysql.connector
@@ -7,15 +8,14 @@ import requests
 app = Flask(__name__)
 CORS(app)
 
-# MySQL Database Connection
+# MySQL Database Connection (Using Environment Variables)
 db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="root", 
-    database="portfolio_db"
+    host=os.environ.get("DB_HOST", "localhost"),
+    user=os.environ.get("DB_USER", "root"),
+    password=os.environ.get("DB_PASSWORD", "root"), 
+    database=os.environ.get("DB_NAME", "portfolio_db")
 )
 cursor = db.cursor(dictionary=True)
-
 
 # ================= VISITOR TRACKING APIs =================
 @app.route('/api/track-view', methods=['GET'])
@@ -27,7 +27,6 @@ def track_view():
         country = 'Network'
         browser = request.user_agent.string
     else:
-
         try:
             res = requests.get(f'https://ipapi.co/{ip}/json/').json()
             city = res.get('city', 'Unknown')
@@ -44,9 +43,8 @@ def track_view():
 
 @app.route('/api/visitors', methods=['GET'])
 def get_visitors():
-    cursor.execute("SELECT * FROM visitors ORDER BY visited_at DESC LIMIT 10") # लास्ट १० व्हिजिटर्स
+    cursor.execute("SELECT * FROM visitors ORDER BY visited_at DESC LIMIT 10")
     return jsonify(cursor.fetchall())
-
 
 # ================= PROJECTS APIs =================
 @app.route('/api/projects', methods=['GET'])
@@ -69,7 +67,6 @@ def delete_project(id):
     db.commit()
     return jsonify({"message": "Project deleted successfully!"})
 
-
 # ================= CERTIFICATES APIs =================
 @app.route('/api/certificates', methods=['GET'])
 def get_certificates():
@@ -89,7 +86,6 @@ def delete_certificate(id):
     cursor.execute("DELETE FROM certificates WHERE id = %s", (id,))
     db.commit()
     return jsonify({"message": "Certificate deleted"})
-
 
 # ================= TECH STACK APIs =================
 @app.route('/api/techstack', methods=['GET'])
