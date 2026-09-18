@@ -368,7 +368,7 @@
         <p>&copy; 2026 Akanksha Shinde. All Rights Reserved.</p>
     </footer>
 
-    <script>
+       <script>
         // Preloader Script (Disappears after 2 seconds)
         setTimeout(() => {
             const loader = document.getElementById('loader');
@@ -419,7 +419,6 @@
         }, { threshold: 0.1 });
         reveals.forEach(section => { observer.observe(section); });
 
-        // Lightbox (Image Popup) Function
         function openModal(src) {
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImage');
@@ -452,16 +451,17 @@
             }
         }
 
-        // Smart Fetch: If Python server is ON, fetch from MySQL. If OFF, keep hardcoded projects.
-        fetch('https://my-portfolio-jyoh.onrender.com')
-            .then(response => {
-                if (!response.ok) throw new Error('Server not running');
-                return response.json();
-            })
+        // ==========================================
+        // DYNAMIC FETCHING FROM RENDER BACKEND (APPEND MODE)
+        // ==========================================
+        const API_URL = 'https://my-portfolio-jyoh.onrender.com';
+
+        // 1. Fetch Projects (Appends to existing hardcoded projects)
+        fetch(`${API_URL}/api/projects`)
+            .then(res => res.json())
             .then(data => {
                 if (data && data.length > 0) {
                     const container = document.getElementById('projects');
-                    container.innerHTML = ''; // Clear old hardcoded project cards
                     data.forEach(project => {
                         container.innerHTML += `
                         <div class="card">
@@ -476,14 +476,47 @@
                     });
                 }
             })
-            .catch(error => {
-                console.log('Python server is off. Showing static hardcoded projects.');
-            });
+            .catch(error => console.log('Error fetching projects:', error));
 
-        // ==========================================
-        // VISITOR TRACKING (Real Profile Views)
-        // ==========================================
-        fetch('http://localhost:5000/api/track-view')
+        // 2. Fetch Certificates (Appends to existing)
+        fetch(`${API_URL}/api/certificates`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const container = document.getElementById('certificates');
+                    data.forEach(cert => {
+                        container.innerHTML += `
+                        <div class="card">
+                            <img src="${cert.image_url}" class="cert-img" alt="${cert.title}" onclick="openModal(this.src)" onerror="this.src='https://via.placeholder.com/400x200/111111/ffffff?text=Certificate'">
+                            <div class="card-body">
+                                <h3>${cert.title}</h3>
+                                <p>${cert.issuer}</p>
+                            </div>
+                        </div>`;
+                    });
+                }
+            })
+            .catch(error => console.log('Error fetching certificates:', error));
+
+        // 3. Fetch Tech Stack (Appends to existing)
+        fetch(`${API_URL}/api/techstack`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data.length > 0) {
+                    const container = document.getElementById('techstack');
+                    data.forEach(tech => {
+                        container.innerHTML += `
+                        <div class="card tech-card">
+                            <img src="${tech.logo_url}" alt="${tech.name}">
+                            <span>${tech.name}</span>
+                        </div>`;
+                    });
+                }
+            })
+            .catch(error => console.log('Error fetching techstack:', error));
+
+        // 4. Visitor Tracking (Real Profile Views)
+        fetch(`${API_URL}/api/track-view`)
             .then(response => response.json())
             .then(data => console.log("View Tracked"))
             .catch(err => console.log("Tracking failed"));
